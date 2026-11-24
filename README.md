@@ -1,0 +1,46 @@
+# arc-runner-image
+
+Runner image for the self-hosted GitHub Actions runners of the Actions Runner
+Controller (ARC) in the `prod-nv` cluster. It extends the official
+[`ghcr.io/actions/actions-runner`](https://github.com/actions/runner/blob/main/images/Dockerfile)
+with what our workflows expect from `ubuntu-latest` but the official image
+leaves out.
+
+Published as `ghcr.io/quero-edu/arc-runner-image`. The scale set that uses it
+is defined in `quero-edu/infra-global-k8s`,
+`clusters/prod-nv/core/infratools-actions-runner-controller.tf`.
+
+## What it adds
+
+| Addition | Why |
+|---|---|
+| `google-chrome-stable`, `fonts-liberation`, `fonts-noto-color-emoji` | Lighthouse (`quero-edu/vitality` in `arcadia`) needs a browser. Installing Chrome and its libraries in every job cost about 28 s per job. |
+| `CHROME_PATH=/usr/local/bin/chrome-no-sandbox` | Chrome's sandbox needs to create user namespaces, which an unprivileged pod cannot do (`failed to move to new namespaces`). The wrapper adds `--no-sandbox`; `google-chrome-stable` itself is unchanged. Lighthouse's `chrome-launcher` and Puppeteer read `CHROME_PATH`. |
+| `secure_path` in `/etc/sudoers` | The official image replaces `/etc/sudoers` with a single `NOPASSWD` line. Without `secure_path`, `sudo <cmd>` fails with `command not found` when the caller passes an environment without `PATH`, which `browser-actions/setup-chrome` does for `apt-get`. |
+
+The runner still runs as `runner` (uid 1001) with passwordless sudo, as in the
+official image.
+
+## Running without the Chrome sandbox
+
+Each runner pod runs one job and is destroyed, and the pages measured are our
+own previews and production sites. Running Chrome without its sandbox there is
+the usual trade-off for browsers in containers. Do not point this image at
+untrusted pages.
+
+## Tags
+
+| Tag | Meaning |
+|---|---|
+| `<runner version>-<YYYYMMDD>` | Immutable build. Pin the scale set to this one. |
+| `<runner version>` | Latest build for that runner version. |
+| `latest`, `sha-<commit>` | Latest build, and the build of a given commit. |
+
+The image is rebuilt every Monday to pick up Chrome and Ubuntu security
+updates. Pull requests build and smoke-test the image without pushing.
+
+## Updating the runner version
+
+Change `ARG RUNNER_VERSION` in the `Dockerfile`. GitHub refuses runners that
+fall too far behind the latest release, so keep it current. Then bump the tag
+pinned in the scale set in `infra-global-k8s`.
