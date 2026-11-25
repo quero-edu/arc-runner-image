@@ -34,9 +34,18 @@ untrusted pages.
 
 | Tag | Meaning |
 |---|---|
-| `<runner version>-<YYYYMMDD>` | Immutable build. Pin the scale set to this one. |
-| `<runner version>` | Latest build for that runner version. |
-| `latest`, `sha-<commit>` | Latest build, and the build of a given commit. |
+| `<runner version>-<YYYYMMDD>.<run number>` | One per publish run, never reused. Find the build here, then pin its digest. |
+| `<runner version>` | Latest build for that runner version. Moves. |
+| `latest` | Latest build. Moves. |
+| `sha-<commit>` | Latest build of a given commit. Moves on the weekly rebuild. |
+
+**Pin the scale set by digest** (`<tag>@sha256:…`), not by tag. Every tag in
+the registry can be pushed again, and a moved tag reaches new nodes without any
+change in `infra-global-k8s`. That happened on 2026-11-25: the dated tag was
+then only `<runner version>-<YYYYMMDD>`, two merges on the same day published
+two builds under `2.338.2-20261125`, and the second one replaced the first.
+The run number in the dated tag keeps tags unique from now on, but the digest is
+what makes the pin immutable.
 
 The image is rebuilt every Monday to pick up Chrome and Ubuntu security
 updates. Pull requests build and smoke-test the image without pushing.
