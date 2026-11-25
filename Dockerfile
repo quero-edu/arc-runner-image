@@ -29,6 +29,14 @@ RUN install -d -m 0755 /etc/apt/keyrings \
        xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
+# zstd, as on ubuntu-latest. @actions/cache compresses with zstd when the binary
+# exists and falls back to gzip otherwise, and the compression method is part of
+# the cache version (getCacheVersion in actions/toolkit). Without it, caches saved
+# by GitHub-hosted runners never restore here and every job reinstalls from scratch.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends zstd \
+    && rm -rf /var/lib/apt/lists/*
+
 # The base image replaces /etc/sudoers without a secure_path, so `sudo <cmd>`
 # fails with "command not found" whenever the caller passes an environment
 # without PATH (browser-actions/setup-chrome does this for apt-get).

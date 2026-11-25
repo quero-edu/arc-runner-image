@@ -54,6 +54,7 @@ jobs:
             "$CHROME_PATH" --headless=new --disable-gpu --dump-dom "data:text/html,<p>ok</p>" | grep -q "<p>ok</p>"
             sudo env -i apt-get --version > /dev/null
             docker compose version
+            zstd --quiet --version
           '
 
       - name: Tag metadata
