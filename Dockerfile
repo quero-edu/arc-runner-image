@@ -2,7 +2,17 @@ ARG RUNNER_VERSION=2.338.2
 
 FROM ghcr.io/actions/actions-runner:${RUNNER_VERSION}
 
+ARG COMPOSE_VERSION=v5.7.0
+ARG COMPOSE_SHA256=7758048ad38e580f22559603312874fec8bb638d021a9e64182385fc17cc12a2
+
 USER root
+
+# Docker Compose CLI plugin. The official image ships the docker CLI and buildx
+# but not compose, which ubuntu-latest has and `docker compose` workflows expect.
+RUN curl -fsSL -o /usr/local/lib/docker/cli-plugins/docker-compose \
+       "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64" \
+    && echo "${COMPOSE_SHA256}  /usr/local/lib/docker/cli-plugins/docker-compose" | sha256sum -c - \
+    && chmod 0755 /usr/local/lib/docker/cli-plugins/docker-compose
 
 # Google Chrome stable from Google's apt repository, plus fonts so pages render
 # like they do on the GitHub-hosted ubuntu-latest image.

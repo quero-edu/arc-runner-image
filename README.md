@@ -16,6 +16,7 @@ is defined in `quero-edu/infra-global-k8s`,
 |---|---|
 | `google-chrome-stable`, `fonts-liberation`, `fonts-noto-color-emoji` | Lighthouse (`quero-edu/vitality` in `arcadia`) needs a browser. Installing Chrome and its libraries in every job cost about 28 s per job. |
 | `CHROME_PATH=/usr/local/bin/chrome-no-sandbox` | Chrome's sandbox needs to create user namespaces, which an unprivileged pod cannot do (`failed to move to new namespaces`). The wrapper adds `--no-sandbox`; `google-chrome-stable` itself is unchanged. Lighthouse's `chrome-launcher` and Puppeteer read `CHROME_PATH`. |
+| Docker Compose CLI plugin (`docker compose`), pinned with its SHA-256 | `ubuntu-latest` ships it and workflows that bring up services with `docker compose` (`montilla`) expect it. The official image only has the docker CLI and buildx. It talks to the dind sidecar of the `arc-prod-nv-dind` scale set. |
 | `secure_path` in `/etc/sudoers` | The official image replaces `/etc/sudoers` with a single `NOPASSWD` line. Without `secure_path`, `sudo <cmd>` fails with `command not found` when the caller passes an environment without `PATH`, which `browser-actions/setup-chrome` does for `apt-get`. |
 
 The runner still runs as `runner` (uid 1001) with passwordless sudo, as in the
@@ -39,8 +40,10 @@ untrusted pages.
 The image is rebuilt every Monday to pick up Chrome and Ubuntu security
 updates. Pull requests build and smoke-test the image without pushing.
 
-## Updating the runner version
+## Updating the runner and Compose versions
 
-Change `ARG RUNNER_VERSION` in the `Dockerfile`. GitHub refuses runners that
+Change `ARG RUNNER_VERSION` in the `Dockerfile`. For Compose, change
+`COMPOSE_VERSION` and `COMPOSE_SHA256` together, taking the checksum from the
+release's `docker-compose-linux-x86_64.sha256` asset. GitHub refuses runners that
 fall too far behind the latest release, so keep it current. Then bump the tag
 pinned in the scale set in `infra-global-k8s`.
