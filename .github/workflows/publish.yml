@@ -53,6 +53,7 @@ jobs:
             "$CHROME_PATH" --version
             "$CHROME_PATH" --headless=new --disable-gpu --dump-dom "data:text/html,<p>ok</p>" | grep -q "<p>ok</p>"
             sudo env -i apt-get --version > /dev/null
+            docker compose version
           '
 
       - name: Tag metadata
