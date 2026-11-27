@@ -37,6 +37,13 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends zstd \
     && rm -rf /var/lib/apt/lists/*
 
+# C/C++ toolchain (make, gcc, g++), as on ubuntu-latest. Native npm modules without
+# prebuilt binaries compile on install: better-sqlite3 13 runs `node-gyp rebuild`
+# directly, which fails here with "not found: make".
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
 # The base image replaces /etc/sudoers without a secure_path, so `sudo <cmd>`
 # fails with "command not found" whenever the caller passes an environment
 # without PATH (browser-actions/setup-chrome does this for apt-get).

@@ -55,6 +55,8 @@ jobs:
             sudo env -i apt-get --version > /dev/null
             docker compose version
             zstd --quiet --version
+            make --version > /dev/null
+            g++ --version > /dev/null
           '
 
       - name: Tag metadata
