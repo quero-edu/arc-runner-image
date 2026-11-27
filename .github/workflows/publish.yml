@@ -57,6 +57,8 @@ jobs:
             zstd --quiet --version
             make --version > /dev/null
             g++ --version > /dev/null
+            ls "$RUNNER_TOOL_CACHE"/node/*/x64.complete > /dev/null
+            "$RUNNER_TOOL_CACHE"/node/*/x64/bin/node --version
           '
 
       - name: Tag metadata
